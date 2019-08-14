@@ -95,7 +95,7 @@ class Request
 	 */
 	public function send()
 	{
-		$result = $this->client->request($this->method, $this->formattedUrl(), $this->getRequestHeaders);
+		$result = $this->client->request($this->method, $this->formattedUrl(), $this->getRequestHeaders());
 
 		$this->response = $result->getBody()->getContents();
 	}
