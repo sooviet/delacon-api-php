@@ -66,37 +66,58 @@ class Request
         return $this->app->getApiUrl();
     }
 
-    /**
-     * @return mixed|string
-     */
-    public function formattedUrl()
-    {
-        $url = $this->getUrl();
+	/**
+	 * @return mixed
+	 */
+	public function getRequestHeaders()
+	{
+		return [
+			'headers' => $this->headers ? $this->headers : null
+		];
+	}
 
-        $params = http_build_query($this->app->getDelaconRequestData());
+	/**
+	 * @return mixed|string
+	 */
+	public function formattedUrl()
+	{
+		$url = $this->getUrl();
 
-        return $url . $params;
-    }
+		$params = http_build_query($this->app->getDelaconRequestData());
 
-    /**
-     * Send request
-     *
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
-    public function send()
-    {
-        $result = $this->client->request($this->method, $this->formattedUrl());
+		return $url . '?' . $params;
+	}
 
-        $this->response = $result;
-    }
+	/**
+	 * Send request
+	 *
+	 * @throws \GuzzleHttp\Exception\GuzzleException
+	 */
+	public function send()
+	{
+		$result = $this->client->request($this->method, $this->formattedUrl(), $this->getRequestHeaders);
 
-    /**
-     * Get response
-     *
-     * @return mixed
-     */
-    public function getResponse()
-    {
-        return $this->response;
-    }
+		$this->response = $result->getBody()->getContents();
+	}
+
+	/**
+	 * Get response
+	 *
+	 * @return mixed
+	 */
+	public function getResponse()
+	{
+		$this->response = simplexml_load_string($this->response);  // loading xml response
+
+		return $this->response;
+	}
+
+	/**
+	 * @return false|string
+	 */
+	public function getJsonResponse()
+	{
+		return json_encode($this->getResponse()); // converting to json response
+	}
+
 }

@@ -10,18 +10,18 @@ abstract class Application
     /*
      * Api Basic Report Url
      *
-     * */
+     **/
     const API_METHOD_REPORT_URL = 'https://vxml5.delacon.com.au/site/report/report.jsp';
 
 	/*
      * Api Authentication Url
      *
-     * */
-    const API_METHOD_AUTHENTICATION_URL = 'https://pla.delaconcorp.com/site/jsp/login.jsp';
+     **/
+    const API_METHOD_AUTHENTICATION_URL = 'https://pla.delaconcorp.com/site/report/report.jsp';
 
-    const API_METHOD_REPORT = 'report_url';
+    const API_METHOD_REPORT = 'report';
 
-    const API_METHOD_AUTHENTICATION = 'api_authentication_url';
+    const API_METHOD_AUTHENTICATION = 'authentication';
 
     const API_HEADER_AUTHENTICATION = 'Auth';
 
@@ -59,8 +59,6 @@ abstract class Application
 	 */
 	public function __construct(DelaconRequest $request, $authMethod = self::API_METHOD_REPORT, $apiKey = null)
 	{
-		parent::__construct();
-
 		$this->request = $request;
 		$this->authMethod = $authMethod;
 		$this->apiKey = $apiKey;

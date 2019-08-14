@@ -4,9 +4,21 @@ namespace Delacon\Application;
 
 use Delacon\Application;
 use Delacon\Remote\Request;
+use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 
 class XmlApplication extends Application
 {
+
+	/*
+	 * JSON Response
+	 **/
+	const RESPONSE_JSON = 'json';
+
+	/*
+	 * XML Response
+	 **/
+	const RESPONSE_XML = 'xml';
 
 	/**
 	 * Prepare Report
@@ -32,7 +44,7 @@ class XmlApplication extends Application
 				break;
 
 			default:
-				throw new \Exception("Invalid auth method.");
+				throw new Exception("Invalid auth method.");
 		}
     }
 
@@ -40,12 +52,12 @@ class XmlApplication extends Application
 	 * Validate Auth Method
 	 *
 	 * @return bool
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	private function validateAuthMethod()
 	{
 		if (!$this->apiKey) {
-			throw new \Exception("Required API Key is missing");
+			throw new Exception("Required API Key is missing");
 		}
 
 		return true;
@@ -55,34 +67,59 @@ class XmlApplication extends Application
 	 * Validate Report Method
 	 *
 	 * @return bool
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	private function validateReportMethod()
 	{
 		if (!$this->request->getUserId() || !$this->request->getPassword()) {
-			throw new \Exception("Required Parameter(s) UserID or Password is missing");
+			throw new Exception("Required Parameter(s) UserID or Password is missing");
 		}
 
 		return true;
 	}
 
 	/**
+	 * Response of the report
+	 *
+	 * @param $request
+	 * @param $responseType
+	 * @return mixed
+	 * @throws Exception
+	 */
+	private function response($request, $responseType)
+	{
+		if ($responseType === self::RESPONSE_JSON)
+			return $request->getJsonResponse();
+
+		else if ($responseType === self::RESPONSE_XML)
+			return $request->getResponse();
+
+		else
+			throw new Exception("Invalid response type");
+	}
+
+	/**
 	 * Retrieve call tracking report
 	 *
+	 * @param string $responseType
+	 * @return false|string
+	 * @throws GuzzleException
+	 * @throws Exception
 	 */
-	public function reports()
+	public function reports($responseType = 'json')
 	{
 		try {
 			$this->prepareReport();
 
 			$request = new Request($this);
 
-			$request->send();
+			$request->send(); //send Api request
 
-			return $request->getResponse();
+			return $this->response($request, $responseType);
 
-		} catch(\Exception $e) {
-			return ['code' => $e->getCode(), 'message' => $e->getMessage()];
+		} catch(Exception $e) {
+
+			throw new Exception($e->getMessage());
 		}
 	}
 
