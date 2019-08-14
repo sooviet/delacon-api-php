@@ -1,20 +1,18 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: localservice2
- * Date: 27/04/18
- * Time: 10:35 AM
+ * Request Class
+ *
+ * User: Soviet Ligal
  */
 
-namespace App\Lib\Delacon\Remote;
+namespace Delacon\Remote;
 
-use App\Lib\Delacon\Application;
+use Delacon\Application;
 use Exception;
 use GuzzleHttp\Client;
 
 class Request
 {
-
     const METHOD_GET    = 'GET';
     const METHOD_POST   = 'POST';
 
@@ -27,19 +25,27 @@ class Request
     const HEADER_AUTHORIZATION     = 'Authorization';
 
     private $app;
+    private $client;
     private $url;
     private $method;
     private $headers;
-    private $parameters;
-    private $body;
 
     private $response;
 
-    public function __construct(Application $app, $url, $method = self::METHOD_GET)
+	/**
+	 * Request constructor.
+	 *
+	 * @param Application $app
+	 * @param string $method
+	 * @throws Exception
+	 */
+	public function __construct(Application $app, $method = self::METHOD_GET)
     {
         $this->app = $app;
-        $this->url = $url;
-        $this->parameters = [];
+        $this->url = $this->app->getApiUrl();
+        $this->headers = $this->app->getApiHeader();
+
+        $this->client = new Client();
 
         switch ($method) {
             case self::METHOD_GET:
@@ -50,39 +56,6 @@ class Request
                 throw new Exception("Invalid request method [$method]");
         }
 
-        $delaconConfig = $this->app->getConfig()['delacon'];
-
-        if (isset($delaconConfig['params'])) {
-            $this->setParameter('params', $delaconConfig['params']);
-        }
-
-    }
-
-    /**
-     * @param $key
-     * @param $value
-     * @return $this
-     */
-    public function setParameter($key, $value)
-    {
-        $this->parameters[$key] = $value;
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getParameters()
-    {
-        return $this->parameters;
-    }
-
-    /**
-     * @return Application
-     */
-    public function getApp(): Application
-    {
-        return $this->app;
     }
 
     /**
@@ -90,15 +63,7 @@ class Request
      */
     public function getUrl()
     {
-        return $this->url;
-    }
-
-    /**
-     * @return string
-     */
-    public function getMethod(): string
-    {
-        return $this->method;
+        return $this->app->getApiUrl();
     }
 
     /**
@@ -107,31 +72,27 @@ class Request
     public function formattedUrl()
     {
         $url = $this->getUrl();
-        $config = $this->app->getConfig()['delacon'];
 
-        $url .= '?userid=' . $config['user_id'];
-        $url .= '&password=' . $config['password'];
+        $params = http_build_query($this->app->getDelaconRequestData());
 
-        $parameters = $this->getParameters()['params'];
-
-        foreach ($parameters as $paramKey => $paramValue) {
-            $url .= '&' . $paramKey . '=' . $paramValue;
-        }
-
-        return $url;
+        return $url . $params;
     }
 
     /**
+     * Send request
+     *
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function send()
     {
-        $result = $this->app->getClient()->request($this->getMethod(), $this->formattedUrl());
+        $result = $this->client->request($this->method, $this->formattedUrl());
 
         $this->response = $result;
     }
 
     /**
+     * Get response
+     *
      * @return mixed
      */
     public function getResponse()

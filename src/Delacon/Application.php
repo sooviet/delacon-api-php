@@ -1,97 +1,113 @@
 <?php
 
-namespace App\Lib\Delacon;
+namespace Delacon;
 
-use App\Lib\Delacon\Remote\Request;
-use Exception;
-use GuzzleHttp\Client;
+use Delacon\Models\DelaconRequest;
 
 abstract class Application
 {
-    private $client;
 
-    protected static $_defaultConfig = [
-        'delacon' => [
-            'user_id' => 'abc123',
-            'password' => 'pass123',
-            'url' => 'https://vxml5.delacon.com.au/site/report/report.jsp',
-            'method' => 'GET',
-            'params' => [
-                'datefrom' => '',
-                'dateto' => '',
-                'reportoption' => 'xml'
-            ]
-        ],
-    ];
-
-    protected $config;
-
-    /**
-     * Create a new controller instance.
+    /*
+     * Api Basic Report Url
      *
-     * @return void
-     */
-    public function __construct(array $userConfig)
-    {
-        $this->setConfig($userConfig);
-        $this->client = new Client();
-    }
+     * */
+    const API_METHOD_REPORT_URL = 'https://vxml5.delacon.com.au/site/report/report.jsp';
 
-    /**
-     * @param $config
-     * @return array
-     */
-    public function setConfig($config)
-    {
-        $this->config = array_replace_recursive(
-            self:: $_defaultConfig,
-            $config
-        );
-
-        return $this->config;
-    }
-
-    /**
-     * @return array
-     */
-    public static function getDefaultConfig(): array
-    {
-        return self:: $_defaultConfig;
-    }
-
-    /**
-     * Retrieve call tracking report
+	/*
+     * Api Authentication Url
      *
-     */
-    public function retrieveReports()
-    {
-        try {
-            $request = new Request($this, $this->getConfig()['delacon']['url'], Request::METHOD_GET);
+     * */
+    const API_METHOD_AUTHENTICATION_URL = 'https://pla.delaconcorp.com/site/jsp/login.jsp';
 
-            $request->send();
+    const API_METHOD_REPORT = 'report_url';
 
-            return $request->getResponse();
+    const API_METHOD_AUTHENTICATION = 'api_authentication_url';
 
-        } catch(\Exception $e) {
-            return response()->json(['code' => $e->getCode(), 'message' => $e->getMessage()]);
-        }
+    const API_HEADER_AUTHENTICATION = 'Auth';
 
-    }
+	/*
+	 * Delacon report
+	 **/
+	protected $authMethod;
 
-    /**
-     * @return Client
-     */
-    public function getClient(): Client
-    {
-        return $this->client;
-    }
+	/*
+	 * Delacon XML Api Url
+	 **/
+	protected $apiUrl;
 
-    /**
-     * @return mixed
-     */
-    public function getConfig()
-    {
-        return $this->config;
-    }
+	/*
+	 * Delacon XML Api Key
+	 **/
+	protected $apiKey;
+
+	/*
+	 * Delacon XML Api Header
+	 **/
+	protected $apiHeader;
+
+	/*
+	 * Delacon report
+	 **/
+	protected $request;
+
+	/**
+	 * XmlApplication constructor.
+	 *
+	 * @param DelaconRequest $request
+	 * @param string $authMethod
+	 * @param null $apiKey
+	 */
+	public function __construct(DelaconRequest $request, $authMethod = self::API_METHOD_REPORT, $apiKey = null)
+	{
+		parent::__construct();
+
+		$this->request = $request;
+		$this->authMethod = $authMethod;
+		$this->apiKey = $apiKey;
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getAuthMethod()
+	{
+		return $this->authMethod;
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getApiUrl()
+	{
+		return $this->apiUrl;
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getApiKey()
+	{
+		return $this->apiKey;
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getApiHeader()
+	{
+		return $this->apiHeader;
+	}
+
+	/**
+	 * Get delacon report's request data
+	 *
+	 * @return array
+	 */
+	public function getDelaconRequestData()
+	{
+		return $this->request->fetchReportData();
+	}
+
+	abstract protected function reports();
 
 }
